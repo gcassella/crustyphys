@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["rk4factory","Given f(t, y) = dy/dt return a function f(t, y, h) that returns the value of y at t+h using the fourth order Runge-Kutta method."]]});
