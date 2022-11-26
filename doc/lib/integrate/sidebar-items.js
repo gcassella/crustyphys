@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["RK4","Fourth-order Runge-Kutta integrator."]]});
