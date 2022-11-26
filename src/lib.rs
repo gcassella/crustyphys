@@ -10,14 +10,14 @@ pub mod integrate {
   use crate::interpolate::chinterp;
 
   /// Fourth-order Runge-Kutta integrator.
-  pub struct RK4 {
-    f: fn(f64, &DVector<f64>) -> DVector<f64>,
+  pub struct RK4<T: Fn(f64, &DVector<f64>) -> DVector<f64>> {
+    f: T,
     h: f64,
   }
 
-  impl RK4 {
+  impl<T: Fn(f64, &DVector<f64>) -> DVector<f64>> RK4<T> {
     /// Create a new RK4 integrator.
-    pub fn new(f: fn(f64, &DVector<f64>) -> DVector<f64>, h: f64) -> RK4 {
+    pub fn new(f: T, h: f64) -> RK4<T> {
       RK4 { f, h }
     }
 
@@ -104,14 +104,14 @@ pub mod integrate {
 
   /// Fourth(Fifth)-order Runge-Kutta-Fehlberg integrator, using an
   /// adaptive step size.
-  pub struct RK45 {
-    f: fn(f64, &DVector<f64>) -> DVector<f64>,
+  pub struct RK45<T: Fn(f64, &DVector<f64>) -> DVector<f64>> {
+    f: T,
     eps: f64,
   }
 
-  impl RK45 {
+  impl<T: Fn(f64, &DVector<f64>) -> DVector<f64>> RK45<T> {
     /// Create a new RK45 integrator.
-    pub fn new(f: fn(f64, &DVector<f64>) -> DVector<f64>, eps: f64) -> RK45 {
+    pub fn new(f: T, eps: f64) -> RK45<T> {
       RK45 { f, eps }
     }
 
