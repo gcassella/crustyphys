@@ -7,6 +7,8 @@ pub mod integrate {
   extern crate nalgebra as na;
   use na::DVector;
 
+  use crate::interpolate::chinterp;
+
   /// Fourth-order Runge-Kutta integrator.
   pub struct RK4 {
     f: fn(f64, &DVector<f64>) -> DVector<f64>,
@@ -96,13 +98,7 @@ pub mod integrate {
       let fa = (self.f)(ta, &ya);
       let fb = (self.f)(tb, &yb);
 
-      let s = (t1 - ta) / (tb - ta);
-      let h00 = 2.0 * s.powi(3) - 3.0 * s.powi(2) + 1.0;
-      let h10 = s.powi(3) - 2.0 * s.powi(2) + s;
-      let h01 = -2.0 * s.powi(3) + 3.0 * s.powi(2);
-      let h11 = s.powi(3) - s.powi(2);
-
-      Ok(h00 * ya + h10 * (tb - ta) * fa + h01 * yb + h11 * (tb - ta) * fb)
+      Ok(chinterp(t1, ta, tb, &ya, &yb, &fa, &fb))
     }
   }
 
@@ -214,15 +210,34 @@ pub mod integrate {
       let fa = (self.f)(ta, &ya);
       let fb = (self.f)(tb, &yb);
 
-      let s = (t1 - ta) / (tb - ta);
-      let h00 = 2.0 * s.powi(3) - 3.0 * s.powi(2) + 1.0;
-      let h10 = s.powi(3) - 2.0 * s.powi(2) + s;
-      let h01 = -2.0 * s.powi(3) + 3.0 * s.powi(2);
-      let h11 = s.powi(3) - s.powi(2);
-
-      Ok(h00 * ya + h10 * (tb - ta) * fa + h01 * yb + h11 * (tb - ta) * fb)
+      Ok(chinterp(t1, ta, tb, &ya, &yb, &fa, &fb))
     }
   }
+}
+
+/// A crusty numerical interpolation library
+pub mod interpolate {
+    use nalgebra::DVector;
+
+    /// Return value of cubic Hermite spline interpolant between at `t` given
+    /// (t0, y0, dy0) and (t1, y1, dy1).
+    pub fn chinterp(
+        t: f64,
+        t0: f64,
+        t1: f64,
+        y0: &DVector<f64>,
+        y1: &DVector<f64>,
+        dy0: &DVector<f64>,
+        dy1: &DVector<f64>,
+    ) -> DVector<f64> {
+        let s = (t - t0) / (t1 - t0);
+        let h00 = 2.0 * s.powi(3) - 3.0 * s.powi(2) + 1.0;
+        let h10 = s.powi(3) - 2.0 * s.powi(2) + s;
+        let h01 = -2.0 * s.powi(3) + 3.0 * s.powi(2);
+        let h11 = s.powi(3) - s.powi(2);
+
+        h00 * y0 + h10 * (t1 - t0) * dy0 + h01 * y1 + h11 * (t1 - t0) * dy1
+    }
 }
 
 #[cfg(test)]
