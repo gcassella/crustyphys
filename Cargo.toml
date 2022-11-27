@@ -8,3 +8,8 @@ edition = "2021"
 [dependencies]
 assert_approx_eq = "1.1.0"
 nalgebra = "0.31.4"
+
+[[bin]]
+name = "three_body"
+test = false
+bench = false
