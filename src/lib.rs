@@ -2,7 +2,7 @@
 #![deny(missing_docs)]
 #![deny(rustdoc::missing_doc_code_examples)]
 
-/// A crusty numerical integration library
+/// A crusty numerical integration module
 pub mod integrate {
   extern crate nalgebra as na;
   use na::DVector;
@@ -215,7 +215,7 @@ pub mod integrate {
   }
 }
 
-/// A crusty numerical interpolation library
+/// A crusty numerical interpolation module
 pub mod interpolate {
   use nalgebra::DVector;
 
@@ -237,6 +237,87 @@ pub mod interpolate {
     let h11 = s.powi(3) - s.powi(2);
 
     h00 * y0 + h10 * (t1 - t0) * dy0 + h01 * y1 + h11 * (t1 - t0) * dy1
+  }
+}
+
+/// A crusty Fast Fourier Transform module
+pub mod fft {
+  /// Compute the discrete Fourier transform of `x` using the Danielson-Lanczos
+  /// algorithm. Assume data is given as a length `2n` vector of `n` complex
+  /// numbers.
+  /// 
+  /// Algorithm and code obtained from Numerical Recipes in C, 3rd Edition.
+  /// 
+  /// `isign = -1` for forward transform, `isign = 1` for inverse transform.
+  /// 
+  /// ```
+  /// use crusty::fft::fft;
+  /// use assert_approx_eq::assert_approx_eq;
+  /// 
+  /// let x = vec![1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0];
+  /// let y = fft(&x, -1).unwrap();
+  /// println!("{:?}", y);
+  /// assert_approx_eq!(y[0], 10.0, 1e-6);
+  /// assert_approx_eq!(y[1], 0.0, 1e-6);
+  /// assert_approx_eq!(y[2], -2.0, 1e-6);
+  /// assert_approx_eq!(y[3], 2.0, 1e-6);
+  /// assert_approx_eq!(y[4], -2.0, 1e-6);
+  /// assert_approx_eq!(y[5], 0.0, 1e-6);
+  /// assert_approx_eq!(y[6], -2.0, 1e-6);
+  /// assert_approx_eq!(y[7], -2.0, 1e-6);
+  /// ```
+  pub fn fft(data: &Vec<f64>, isign: i32) -> Result<Vec<f64>, String> {
+    let n = data.len() / 2 as usize;
+    if data.len() % 2 != 0 {
+      return Err(String::from("data length is not a multiple of 2"));
+    } 
+    if n < 2 || n&(n-1) != 0 {
+      return Err(String::from("data length is not a power of 2"));
+    }
+
+    let mut out = data.clone();
+    let nn = 2*n as usize;
+    let mut mmax: usize = 2;
+    let mut j: usize = 1;
+    for i in (1..nn).step_by(2) {
+      if j > i as usize {
+        out.swap(j-1 as usize, i as usize - 1);
+        out.swap(i as usize, j as usize);
+      }
+
+      let mut m = n;
+      while m >= 2 && j > m {
+        j -= m;
+        m /= 2;
+      }
+      j += m;
+    }
+
+    while nn > mmax {
+      let istep = 2 * mmax;
+      let theta = isign as f64 * (2.0 * std::f64::consts::PI / mmax as f64);
+      let wtemp = (0.5*theta).sin();
+      let wpr = -2.0 * wtemp * wtemp;
+      let wpi = (theta).sin();
+      let mut wr = 1.0;
+      let mut wi = 0.0;
+      for m in (1..mmax).step_by(2) {
+        for i in (m..nn).step_by(istep) {
+          let j = i as usize + mmax;
+          let tempr = wr * out[j-1] - wi * out[j];
+          let tempi = wr * out[j] + wi * out[j-1];
+          out[j-1] = out[i as usize-1] - tempr;
+          out[j] = out[i as usize] - tempi;
+          out[i as usize-1] += tempr;
+          out[i as usize] += tempi;
+        }
+        let wtemp = wr;
+        wr += wr * wpr - wi * wpi;
+        wi += wi * wpr + wtemp * wpi;
+      }
+      mmax = istep;
+    }
+    Ok(out)
   }
 }
 
