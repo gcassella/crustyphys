@@ -4,6 +4,8 @@ use na::DVector;
 
 use std::{fs::File, io::Write};
 
+use crusty::data::write_csv;
+
 /// Given phase space coordinates ({x_i}, {v_i}) of a set of masses {m_i},
 /// calculate the gravitational force f_i acting on each mass.
 fn force(y: &DVector<f64>, masses: &Vec<f64>) -> DVector<f64> {
@@ -44,23 +46,6 @@ fn make_ode_sys(
     let curr_force = force(&(x), &masses);
     cat_vec(&v, &curr_force)
   }
-}
-
-/// Write the time `t` and phase space positions `y` to a CSV file.
-fn write_out(file: &mut File, t: f64, y: &DVector<f64>) -> () {
-  file
-    .write(format!("{t}").as_bytes())
-    .expect("Unable to write to file");
-  for i in 0..y.len() {
-    file.write(b",").expect("Unable to write to file");
-    let val = y[(i)];
-    file
-      .write(format!("{val}").as_bytes())
-      .expect("Unable to write to file");
-  }
-  file
-    .write("\n".as_bytes())
-    .expect("Unable to write to file");
 }
 
 fn main() -> () {
@@ -110,7 +95,7 @@ fn main() -> () {
     .expect("Unable to write to file");
 
   for _ in 0..1000000 {
-    write_out(&mut file, t0, &y0);
+    write_csv(&mut file, t0, &y0);
     let (y1, h1) = solver.step(t0, &y0, h0).unwrap();
     let t1 = t0 + h0;
 

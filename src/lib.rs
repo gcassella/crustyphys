@@ -2,6 +2,9 @@
 #![deny(missing_docs)]
 #![deny(rustdoc::missing_doc_code_examples)]
 
+/// Helper module for handling data
+pub mod data;
+
 /// A crusty numerical integration module
 pub mod integrate {
   extern crate nalgebra as na;
