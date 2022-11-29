@@ -245,18 +245,17 @@ pub mod fft {
   /// Compute the discrete Fourier transform of `x` using the Danielson-Lanczos
   /// algorithm. Assume data is given as a length `2n` vector of `n` complex
   /// numbers.
-  /// 
+  ///
   /// Algorithm and code obtained from Numerical Recipes in C, 3rd Edition.
-  /// 
+  ///
   /// `isign = -1` for forward transform, `isign = 1` for inverse transform.
-  /// 
+  ///
   /// ```
   /// use crusty::fft::fft;
   /// use assert_approx_eq::assert_approx_eq;
-  /// 
+  ///
   /// let x = vec![1.0, 0.0, 2.0, 0.0, 3.0, 0.0, 4.0, 0.0];
-  /// let y = fft(&x, -1).unwrap();
-  /// println!("{:?}", y);
+  /// let y = fft(x, -1).unwrap();
   /// assert_approx_eq!(y[0], 10.0, 1e-6);
   /// assert_approx_eq!(y[1], 0.0, 1e-6);
   /// assert_approx_eq!(y[2], -2.0, 1e-6);
@@ -266,23 +265,22 @@ pub mod fft {
   /// assert_approx_eq!(y[6], -2.0, 1e-6);
   /// assert_approx_eq!(y[7], -2.0, 1e-6);
   /// ```
-  pub fn fft(data: &Vec<f64>, isign: i32) -> Result<Vec<f64>, String> {
+  pub fn fft(mut data: Vec<f64>, isign: i32) -> Result<Vec<f64>, String> {
     let n = data.len() / 2 as usize;
     if data.len() % 2 != 0 {
       return Err(String::from("data length is not a multiple of 2"));
-    } 
-    if n < 2 || n&(n-1) != 0 {
+    }
+    if n < 2 || n & (n - 1) != 0 {
       return Err(String::from("data length is not a power of 2"));
     }
 
-    let mut out = data.clone();
-    let nn = 2*n as usize;
+    let nn = 2 * n as usize;
     let mut mmax: usize = 2;
     let mut j: usize = 1;
     for i in (1..nn).step_by(2) {
       if j > i as usize {
-        out.swap(j-1 as usize, i as usize - 1);
-        out.swap(i as usize, j as usize);
+        data.swap(j - 1 as usize, i as usize - 1);
+        data.swap(i as usize, j as usize);
       }
 
       let mut m = n;
@@ -296,7 +294,7 @@ pub mod fft {
     while nn > mmax {
       let istep = 2 * mmax;
       let theta = isign as f64 * (2.0 * std::f64::consts::PI / mmax as f64);
-      let wtemp = (0.5*theta).sin();
+      let wtemp = (0.5 * theta).sin();
       let wpr = -2.0 * wtemp * wtemp;
       let wpi = (theta).sin();
       let mut wr = 1.0;
@@ -304,12 +302,12 @@ pub mod fft {
       for m in (1..mmax).step_by(2) {
         for i in (m..nn).step_by(istep) {
           let j = i as usize + mmax;
-          let tempr = wr * out[j-1] - wi * out[j];
-          let tempi = wr * out[j] + wi * out[j-1];
-          out[j-1] = out[i as usize-1] - tempr;
-          out[j] = out[i as usize] - tempi;
-          out[i as usize-1] += tempr;
-          out[i as usize] += tempi;
+          let tempr = wr * data[j - 1] - wi * data[j];
+          let tempi = wr * data[j] + wi * data[j - 1];
+          data[j - 1] = data[i as usize - 1] - tempr;
+          data[j] = data[i as usize] - tempi;
+          data[i as usize - 1] += tempr;
+          data[i as usize] += tempi;
         }
         let wtemp = wr;
         wr += wr * wpr - wi * wpi;
@@ -317,7 +315,34 @@ pub mod fft {
       }
       mmax = istep;
     }
-    Ok(out)
+    Ok(data)
+  }
+
+  /// Compute the discrete Fourier transform of a vector of `n` real values
+  ///
+  /// `isign = -1` for forward transform, `isign = 1` for inverse transform.
+  /// ```
+  /// use crusty::fft::rfft;
+  /// use assert_approx_eq::assert_approx_eq;
+  /// let x = vec![1.0, 2.0, 3.0, 4.0];
+  /// let y = rfft(x, -1).unwrap();
+  /// assert_approx_eq!(y[0], 10.0, 1e-6);
+  /// assert_approx_eq!(y[1], 0.0, 1e-6);
+  /// assert_approx_eq!(y[2], -2.0, 1e-6);
+  /// assert_approx_eq!(y[3], 2.0, 1e-6);
+  /// assert_approx_eq!(y[4], -2.0, 1e-6);
+  /// assert_approx_eq!(y[5], 0.0, 1e-6);
+  /// assert_approx_eq!(y[6], -2.0, 1e-6);
+  /// assert_approx_eq!(y[7], -2.0, 1e-6);
+  /// ```
+  pub fn rfft(mut data: Vec<f64>, isign: i32) -> Result<Vec<f64>, String> {
+    let n = data.len();
+    data.resize(n * 2, 0.0);
+    for i in (0..n).rev() {
+      data[i * 2] = data[i];
+      data[i * 2 + 1] = 0.0;
+    }
+    fft(data, isign)
   }
 }
 
