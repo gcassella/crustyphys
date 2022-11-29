@@ -1,6 +1,6 @@
 use std::{fmt::Display, fs::File, io::Write};
 
-/// Write the time `t` and phase space positions `y` to a CSV file.
+/// Write out contents of `data` to CSV, with `label` in first column
 pub fn write_csv<S, T>(file: &mut File, label: f64, data: &T) -> ()
 where
   S: Display,
