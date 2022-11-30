@@ -1,7 +1,7 @@
 use std::{fmt::Display, fs::File, io::Result, io::Write};
 
 /// Write out contents of `data` to CSV, with `label` in first column
-pub fn write_csv<S, T>(file: &mut File, label: f64, data: &T) -> Result<()>
+pub fn csv_writeline<S, T>(file: &mut File, label: f64, data: &T) -> Result<()>
 where
   S: Display,
   for<'a> &'a T: IntoIterator<Item = &'a S>,

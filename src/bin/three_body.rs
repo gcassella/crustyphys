@@ -4,7 +4,7 @@ use na::DVector;
 
 use std::{fs::File, io::Write};
 
-use crusty::data::write_csv;
+use crusty::data::csv_writeline;
 
 /// Given phase space coordinates ({x_i}, {v_i}) of a set of masses {m_i},
 /// calculate the gravitational force f_i acting on each mass.
@@ -95,7 +95,7 @@ fn main() -> () {
     .expect("Unable to write to file");
 
   for _ in 0..1000000 {
-    write_csv(&mut file, t0, &y0).expect("Error writing to CSV");
+    csv_writeline(&mut file, t0, &y0).expect("Error writing to CSV");
     let (y1, h1) = solver.step(t0, &y0, h0).unwrap();
     let t1 = t0 + h0;
 
